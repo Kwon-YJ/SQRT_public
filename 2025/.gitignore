@@ -1,0 +1,27 @@
+# python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+*.pyc
+
+# venv
+.venv
+
+# date file
+*.pkl
+*.CSV
+*.csv
+*.xlsx
+*.log
+*.key
+*.DS_Store
+
+*.env
+*.png
+*.pickle
+*.txt
+
+*.out

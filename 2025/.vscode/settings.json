@@ -1,0 +1,16 @@
+{
+    "terminal.integrated.commandsToSkipShell": [
+        "language-julia.interrupt"
+    ],
+    "julia.symbolCacheDownload": true,
+    "julia.enableTelemetry": true,
+    "editor.formatOnSave": true,
+    "python.languageServer": "Pylance",
+    "python.linting.pylintEnabled": true,
+    "python.linting.mypyEnabled": true,
+    "python.formatting.provider": "black",
+    "mypy-type-checker.severity": {
+        "error": "Warning"
+    },
+    "python.linting.pyrightEnabled": true,
+}

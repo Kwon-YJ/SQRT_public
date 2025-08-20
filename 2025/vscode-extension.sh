@@ -1,0 +1,40 @@
+extensions=(
+    alexisvt.flutter-snippets
+    cameronbieganek.julia-color-themes
+    dart-code.dart-code
+    dart-code.flutter
+    gruntfuggly.todo-tree
+    jmkrivocapich.drawfolderstructure
+    julialang.language-julia
+    julialight.julia-light
+    l-i-v.mql-tools
+    mechatroner.rainbow-csv
+    ms-azuretools.vscode-docker
+    ms-ceintl.vscode-language-pack-ko
+    ms-python.black-formatter
+    ms-python.debugpy
+    ms-python.mypy-type-checker
+    ms-python.pylint
+    ms-python.python
+    ms-python.vscode-pylance
+    ms-toolsai.jupyter
+    ms-toolsai.jupyter-keymap
+    ms-toolsai.jupyter-renderers
+    ms-toolsai.vscode-jupyter-cell-tags
+    ms-toolsai.vscode-jupyter-slideshow
+    ms-vscode-remote.remote-containers
+    ms-vscode-remote.remote-ssh
+    ms-vscode-remote.remote-ssh-edit
+    ms-vscode-remote.remote-wsl
+    ms-vscode-remote.vscode-remote-extensionpack
+    ms-vscode.cpptools
+    ms-vscode.remote-explorer
+    ms-vscode.remote-server
+    nash.awesome-flutter-snippets
+    pkief.material-icon-theme
+    usernamehw.errorlens
+)
+
+for ext in "${extensions[@]}"; do
+    code --install-extension "$ext"
+done

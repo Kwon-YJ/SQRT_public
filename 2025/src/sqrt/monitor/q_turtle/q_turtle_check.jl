@@ -1,0 +1,6 @@
+run(`julia quick_turtle_lower_all.jl --market future --base_ticker USDT --interval 1h`)
+run(`julia quick_turtle_lower_all.jl --market future --base_ticker USDT --interval 2h`)
+run(`julia quick_turtle_lower_all.jl --market future --base_ticker USDT --interval 4h`)
+run(`julia quick_turtle_lower_all.jl --market future --base_ticker USDT --interval 6h`)
+run(`julia quick_turtle_lower_all.jl --market future --base_ticker USDT --interval 8h`)
+run(`julia quick_turtle_lower_all.jl --market future --base_ticker USDT --interval 12h`)

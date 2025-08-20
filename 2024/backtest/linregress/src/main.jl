@@ -1,0 +1,350 @@
+using Statistics
+include("../../../../2022/julia_test/utils.jl")
+
+
+
+# Pine Script와 동일한 방식으로 표준 편차 계산
+function calc_std_dev_like_pine_script(Y, a, b)
+    n = length(Y)
+    X = get_X_vector(Y)
+    deviations = [Y[i] - (a * X[i] + b) for i in 1:n]
+    return std(deviations, corrected=false)
+end
+
+function get_X_vector(target)
+    return Vector(range(1, length(target)))
+end
+
+function get_lin_reg(Y)
+    X = get_X_vector(Y)
+    ΣX = sum(X)
+    ΣY = sum(Y)
+    ΣXY = sum(X.*Y)
+    ΣXsqrd = sum(X.^2)
+    n = length(X)
+    a = (n * ΣXY - (ΣX * ΣY)) / ((n * ΣXsqrd) - (ΣX)^2)
+    b = (ΣY - (a * ΣX))/n
+    # Y = aX + b
+    return a, b
+end
+
+
+BTC_ohlcv = fetch_ohlcv("BTCUSDT", "4h", 1440)
+BTC_close = map(x->x[5], BTC_ohlcv)
+
+result_a, result_b = get_lin_reg(BTC_close)
+
+std_value = calc_std_dev_like_pine_script(BTC_close, result_a, result_b)
+
+middle_value = result_a*1440 + result_b
+upper_value = middle_value + 2 * std_value 
+lower_value = middle_value - 2 * std_value 
+
+println(middle_value)
+
+
+BTC_ohlcv = fetch_ohlcv("BTCUSDT", "4h", 1500)
+BTC_close = map(x->x[5], BTC_ohlcv)
+
+
+for i in 1:1500-1440-1
+
+    temp_BTC_close = BTC_close[i:i+1440-1]
+
+    result_a, result_b = get_lin_reg(temp_BTC_close)
+
+    std_value = calc_std_dev_like_pine_script(temp_BTC_close, result_a, result_b)
+
+    middle_value = result_a*1440 + result_b
+    upper_value = middle_value + 2 * std_value 
+    lower_value = middle_value - 2 * std_value 
+
+    println(middle_value)
+
+
+end
+
+
+
+
+
+exit()
+
+
+
+
+
+
+using Statistics
+using DataFrames
+using CSV
+using Dates
+
+include("../../../../2022/julia_test/utils.jl")
+
+
+function csv_init(input_data, file_name)
+    if isempty(input_data)
+        return nothing
+    end
+    if length(input_data) < 4
+        return nothing
+    end
+    try 
+        if input_data[4] < 0.15
+            return nothing
+        end
+    catch
+        if parse(Float64, input_data[4])  < 0.15
+            return nothing
+        end
+    end
+
+    df = DataFrame(A = [input_data[1]], B = [input_data[2]], C = [input_data[3]], D = [input_data[4]])
+    # CSV.write(file_name, df, append=true)
+    try
+        CSV.write("../result/"*file_name, df, append=true)
+    catch
+        return nothing
+    end
+end
+
+
+function shortest_distance_(ratio, winrate)
+    lins = [i/10000 for i in 0:100000]
+    y = [-log(0.99) / (log(1+0.01*i) - log(0.99)) for i in lins]
+    least_distance = 100
+    for i in 1:100000
+        dx = lins[i] - ratio
+        dy = y[i] - winrate
+        distance = sqrt(dx^2 + dy^2)
+        if distance < least_distance
+            least_distance = distance
+        end
+    end
+    base_line = -log(0.99) / (log(1+0.01*ratio) - log(0.99))
+    if winrate > base_line
+        return least_distance
+    else
+        return -least_distance
+    end
+end
+
+
+function get_performance_(trade_log)
+    if length(trade_log) == 0
+        return 0
+    else
+        trade_count = length(trade_log)
+    end
+    win = []
+    lose = []
+    for value in trade_log
+        if value > 0
+            push!(win,value)
+        else
+            push!(lose,value)
+        end
+    end
+
+    if length(lose) == 0
+        avg_lose = 10^-6
+        std_lose = 10^-6
+    else
+        avg_lose = mean(lose)
+        std_lose = std(lose, corrected=false)
+    end
+
+    if length(win) == 0
+        avg_win = 10^-6
+        win_count = 0
+    else
+        avg_win = mean(win)
+        win_count = length(win)
+    end
+
+    avg_w_l_ratio = -1 * avg_win / avg_lose
+    if avg_w_l_ratio < 0
+        total_perform = "Nan"
+    else
+        total_perform = shortest_distance_(avg_w_l_ratio, win_count / trade_count)
+    end
+    return total_perform
+end
+
+
+function load_data(data_dir="../../data/", file_name="E6_1d.CSV")
+    csv_data = CSV.read(data_dir*file_name, DataFrame)
+    csv_data = csv_data[2:end, :]
+    try
+        rename!(csv_data, [:t, :o, :h, :l, :c, :v, :s, :real_v])
+    catch
+        rename!(csv_data, [:t, :o, :h, :l, :c, :v])
+    end
+    #only_close = csv_data[!, "c"]
+    #ema_8 = ema(only_close, 8)
+    #ema_16 = ema(only_close, 16)
+    #return csv_data, ema_8, ema_16
+    return csv_data
+end
+
+
+
+
+
+
+
+
+function back_test(open_data, high_data, low_data, close_data, time_data,ema_8,ema_16,tail_d,body_d, param_1::Float64, param_2::Float64, file_name::String)
+
+    is_long = false
+    slippage = 1
+    long_entry_price = Vector{Float64}([])
+    trade_log = Vector{Float64}([])
+    long_sl = Vector{Float64}([])
+    long_tp = Vector{Float64}([])
+
+    for i::Int64=1:length(close_data)-1
+        low_::Float64 = low_data[i]
+        close_::Float64 = close_data[i]
+        short_ema::Float64 = ema_8[i]
+        open_::Float64 = open_data[i]
+
+        if is_long == false
+            if low_ < short_ema && min(close_, open_) > short_ema && short_ema > ema_16[i]
+                if body_d[i] * param_1 < tail_d[i]
+                    is_long = true
+                    push!(long_entry_price, open_data[i+1])
+                    push!(long_sl, low_)
+                    push!(long_tp, open_data[i+1] + param_2* abs((low_-max(close_, open_))))
+                    long_entry_time = time_data[i+1]
+                end
+            end
+        else
+            if low_ < long_sl[end]
+                is_long = false
+                earning = 100 * (long_sl[end] / long_entry_price[end] * slippage -1)
+                push!(trade_log, earning)
+            elseif high_data[i] > long_tp[end]
+                is_long = false
+                earning = 100 * (long_tp[end] / long_entry_price[end] * slippage -1)
+                push!(trade_log, earning)
+            end
+        end
+    end
+        
+    result = get_performance_(trade_log)
+    csv_init([param_1, param_2, length(trade_log), result], file_name)
+end
+
+
+
+
+@inbounds function ema(data::Vector{T}, period::Int) where T
+    alpha = 2 / (period + 1)
+    ema_values = similar(data, T)
+    sma = sum(@view data[1:period]) / period
+    ema_values[period] = sma
+    @fastmath @simd for i in (period+1):length(data)
+        ema_values[i] = (data[i] - ema_values[i-1]) * alpha + ema_values[i-1]
+    end
+    return ema_values
+end
+
+
+# time_frames = ["1m", "5m", "15m", "30m", "1h", "2h", "4h", "6h", "8h", "12h", "1d", "3d"]
+time_frames = ["5m"]
+
+
+
+
+
+
+temp_result = []
+
+
+
+
+
+
+for time_frame in time_frames
+
+    data_dir = "../../crypto_816/data/$(time_frame)/"
+    
+
+    mkdir_exist_ok("../result/")
+
+
+    for file_name = readdir(data_dir)
+        println(file_name)
+        ohlc = 0
+        try
+            ohlc = load_data(data_dir, file_name)
+        catch
+            println("load_fail $(file_name)")
+            continue
+        end
+        
+
+        println("done")
+
+        
+
+        open_data = ohlc.o
+        high_data = ohlc.h
+        low_data = ohlc.l
+        close_data = ohlc.c
+        time_data = ohlc.t
+
+
+        push!(temp_result, close_data)
+        
+
+        continue
+
+        sleep(9999999)
+        exit()
+
+
+
+
+
+        ema_8 = ema(close_data, 8)
+        ema_16 = ema(close_data, 16)
+
+
+        tail_d = Vector{Float64}([])
+        body_d = Vector{Float64}([])
+
+
+        for i::Int64=1:length(close_data)
+            low_::Float64 = low_data[i]
+            close_::Float64 = close_data[i]
+            open_::Float64 = open_data[i]
+            push!(tail_d, min(close_, open_) - low_)
+            push!(body_d, abs(close_ - open_))
+        end
+
+        println("start : $(file_name)")
+        for param_1 in range(start=0.8, stop=5, length=35)
+            Threads.@threads for param_2 in range(start=0.8, stop=5, length=35)
+            # for param_2 in range(start=0.8, stop=5, length=35)
+                try
+                    @inbounds @fastmath back_test(open_data, high_data, low_data, close_data, time_data,ema_8,ema_16,tail_d,body_d , param_1, param_2, file_name)
+                catch
+                    continue
+                end
+            end
+        end
+
+    end
+
+end
+
+
+
+
+
+
+
+

@@ -1,0 +1,6 @@
+[MASTER]
+docstring-min-length=10
+no-docstring-rgx=^_
+
+[MESSAGES CONTROL]
+disable=W0621

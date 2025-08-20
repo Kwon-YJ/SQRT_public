@@ -1,0 +1,62 @@
+[project]
+name = "sqrt"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "Kwon-YJ", email = "kyj1435@gmail.com" }
+]
+dependencies = [
+    "numpy==1.26",
+    "pandas>=2.2.3",
+    "pykrx>=1.0.48",
+    "ccxt>=4.4.28",
+    "matplotlib>=3.9.2",
+    "parmap>=1.7.0",
+    "python-telegram-bot==13.4.1",
+    "rel>=0.4.9.19",
+    "gdown>=5.2.0",
+    "psutil>=6.1.0",
+    "pycryptodome>=3.22.0",
+    "crypto>=1.4.1",
+    "black>=24.10.0",
+    "mojito2>=0.1.6",
+    "mypy>=1.13.0",
+    "tqdm>=4.67.0",
+    "julia>=0.6.2",
+    "pandas-ta>=0.3.14b0",
+    "setuptools>=75.5.0",
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.3",
+    "schedule>=1.2.2",
+    "toml>=0.10.2",
+    "urllib3==1.26.18",
+    "pybit==5.6.1",
+    "streamlit>=1.46.1",
+    "pymssql>=2.3.4",
+    "telethon>=1.40.0",
+    "pydantic>=2.11.7",
+    "fastapi>=0.116.1",
+    "uvicorn>=0.35.0",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sqrt"]
+
+[project.scripts]
+hello = "sqrt:hello"
+krx-save = "sqrt.utils.data_downloader:krx_saver"
+binance-save = "sqrt.utils.data_downloader:binance_saver"
+vscode-backup = "cfg.sh_command:backup"
